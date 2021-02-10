@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
                     "classpath:jwt.properties"
                 })
 @EntityScan("com.accenture.model")
-@RequestMapping(value = "authentication")
 public class AuthenticationApplication {
 
   public static void main(String[] args) {
