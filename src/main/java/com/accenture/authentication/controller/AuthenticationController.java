@@ -24,7 +24,7 @@ public class AuthenticationController {
             .build();
   }
 
-  @PostMapping(value = "token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+  @PostMapping(value = "validate", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<Boolean> isTokenExpired(String token) {
     return ResponseEntity.ok(authenticationService.isTokenExpired(token));
   }
