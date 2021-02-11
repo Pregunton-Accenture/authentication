@@ -46,12 +46,16 @@ public class JwtToken implements Serializable {
   }
 
   public String generateToken(String username) {
-    return doGenerateToken(new HashMap<>(), username);
+    return doGenerateToken(new HashMap<>(), username, 20);
   }
 
-  private String doGenerateToken(Map<String, Object> claims, String username) {
+  public String generateRefreshToken(String username) {
+    return doGenerateToken(new HashMap<>(), username, 60);
+  }
+
+  private String doGenerateToken(Map<String, Object> claims, String username, int minutes) {
     Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.MINUTE, 20);
+    calendar.add(Calendar.MINUTE, minutes);
     return Jwts.builder()
         .setClaims(claims)
         .setSubject(username)
