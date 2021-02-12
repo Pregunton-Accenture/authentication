@@ -7,20 +7,12 @@ import com.accenture.pojo.TokenDto;
 import com.accenture.pojo.UserCredentialsDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
 @Service
 public class AuthenticationService {
-
-  @Autowired
-  private AuthenticationManager authenticationManager;
-
-  @Autowired
-  private JwtUserDetailsService jwtUserDetailsService;
 
   @Autowired
   private JwtToken jwtToken;
@@ -34,8 +26,6 @@ public class AuthenticationService {
     UserCredentials userCredentials = objectMapper.convertValue(userCredentialsDTO, UserCredentials.class);
     String username = userCredentials.getUsername();
 
-    authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(username, userCredentials.getPassword()));
     String token = jwtToken.generateToken(username);
     String refreshToken = jwtToken.generateRefreshToken(username);
     return new TokenDto(token, refreshToken);
@@ -44,7 +34,7 @@ public class AuthenticationService {
   public TokenDto refresh(String refreshToken) {
     Objects.requireNonNull(refreshToken);
 
-    if (jwtToken.isTokenExpired(refreshToken)) {
+    if (isTokenExpired(refreshToken)) {
       throw new TokenExpiredException();
     }
     String username = jwtToken.getUsernameFromToken(refreshToken);

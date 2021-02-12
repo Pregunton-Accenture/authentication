@@ -1,5 +1,6 @@
 package com.accenture.authentication.service;
 
+import com.accenture.authentication.exception.TokenExpiredException;
 import com.accenture.authentication.jwt.JwtToken;
 import com.accenture.model.UserCredentials;
 import com.accenture.pojo.TokenDto;
@@ -9,18 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(SpringExtension.class)
 public class AuthenticationServiceTest {
@@ -31,14 +28,9 @@ public class AuthenticationServiceTest {
   private static final String REFRESH_TOKEN = "refresh_token";
   private static final UserCredentialsDTO CREDENTIALS_DTO = new UserCredentialsDTO(USERNAME, PASSWORD);
   private static final UserCredentials CREDENTIALS = new UserCredentials(USERNAME, PASSWORD);
-  private static final TokenDto TOKEN_DTO = new TokenDto(TOKEN, REFRESH_TOKEN);
 
   @InjectMocks
   private AuthenticationService authenticationService;
-  @Mock
-  private AuthenticationManager authenticationManager;
-  @Mock
-  private JwtUserDetailsService jwtUserDetailsService;
   @Mock
   private JwtToken jwtToken;
   @Mock
@@ -48,8 +40,6 @@ public class AuthenticationServiceTest {
   void authenticate_WhenUserCredentialsAreValid_ShouldReturnTokenDto() {
     doReturn(CREDENTIALS).when(objectMapper)
         .convertValue(CREDENTIALS_DTO, UserCredentials.class);
-    doReturn(mock(Authentication.class)).when(authenticationManager)
-        .authenticate(any());
     doReturn(TOKEN).when(jwtToken)
         .generateToken(USERNAME);
     doReturn(REFRESH_TOKEN).when(jwtToken)
@@ -67,12 +57,61 @@ public class AuthenticationServiceTest {
   }
 
   @Test
-  void authenticate_WhenUserCredentialsAreNotAuthenticated_ShouldThrowAuthenticationException() {
-    doReturn(CREDENTIALS).when(objectMapper)
-        .convertValue(CREDENTIALS_DTO, UserCredentials.class);
-    doThrow(new AuthenticationCredentialsNotFoundException("message")).when(authenticationManager)
-        .authenticate(any());
+  void refresh_WhenSendRefreshToken_ShouldReturnTokenDto() {
+    doReturn(false).when(jwtToken)
+        .isTokenExpired(REFRESH_TOKEN);
+    doReturn(USERNAME).when(jwtToken)
+        .getUsernameFromToken(REFRESH_TOKEN);
+    doReturn(TOKEN).when(jwtToken)
+        .generateToken(USERNAME);
+    doReturn(REFRESH_TOKEN).when(jwtToken)
+        .generateRefreshToken(USERNAME);
 
-    assertThrows(AuthenticationException.class, () -> authenticationService.authenticate(CREDENTIALS_DTO));
+    TokenDto result = authenticationService.refresh(REFRESH_TOKEN);
+
+    assertEquals(TOKEN, result.getToken());
+    assertEquals(REFRESH_TOKEN, result.getRefreshToken());
+  }
+
+  @Test
+  void refresh_WhenSendNullRefreshToken_ShouldThrowNullPointerException() {
+    assertThrows(NullPointerException.class, () -> authenticationService.refresh(null));
+  }
+
+  @Test
+  void refresh_WhenSendExpiredRefreshToken_ShouldThrowTokenExpiredException() {
+    doReturn(true).when(jwtToken)
+        .isTokenExpired(REFRESH_TOKEN);
+
+    assertThrows(TokenExpiredException.class, () -> authenticationService.refresh(REFRESH_TOKEN));
+  }
+
+  @Test
+  void isTokenExpired_WhenSendNotExpiredRefreshToken_ShouldReturnFalse() {
+    doReturn(false).when(jwtToken)
+        .isTokenExpired(REFRESH_TOKEN);
+
+    assertFalse(authenticationService.isTokenExpired(TOKEN));
+  }
+
+  @Test
+  void isTokenExpired_WhenSendExpiredRefreshToken_ShouldReturnTrue() {
+    doReturn(true).when(jwtToken)
+        .isTokenExpired(TOKEN);
+
+    assertTrue(authenticationService.isTokenExpired(TOKEN));
+  }
+
+  @Test
+  void isTokenExpired_WhenSendNullRefreshToken_ShouldReturnTrue() {
+    assertTrue(authenticationService.isTokenExpired(null));
+  }
+
+  @Test
+  void isTokenExpired_WhenSendRefreshTokenButExceptionWasThrown_ShouldReturnTrue() {
+    doThrow(RuntimeException.class).when(jwtToken)
+        .isTokenExpired(TOKEN);
+
+    assertTrue(authenticationService.isTokenExpired(TOKEN));
   }
 }

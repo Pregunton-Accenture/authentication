@@ -1,6 +1,7 @@
 package com.accenture.authentication.service;
 
 import com.accenture.authentication.exception.UsernameExistException;
+import com.accenture.authentication.exception.UsernameExistExceptionTest;
 import com.accenture.authentication.repository.UserCredentialsRepository;
 import com.accenture.model.UserCredentials;
 import com.accenture.pojo.UserCredentialsDTO;
@@ -16,13 +17,14 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(SpringExtension.class)
 public class UserCredentialsServiceTest {
 
   private static final String USERNAME = "user";
-  private static final String PASSWORD = "pass";
+  private static final String PASSWORD = "encoded_password";
   private static final UserCredentialsDTO CREDENTIALS_DTO = new UserCredentialsDTO(USERNAME, PASSWORD);
   private static final UserCredentials CREDENTIALS = new UserCredentials(USERNAME, PASSWORD);
 
@@ -44,6 +46,8 @@ public class UserCredentialsServiceTest {
         .findByUsername(CREDENTIALS.getUsername());
     doReturn(encodedPassword).when(passwordEncoder)
         .encode(CREDENTIALS.getPassword());
+    doReturn(CREDENTIALS).when(userCredentialsRepository)
+        .save(any());
 
     UserCredentials result = userCredentialsService.insert(CREDENTIALS_DTO);
 

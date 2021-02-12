@@ -16,8 +16,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-@Api(tags = "Authentication API", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+@Api(tags = "Authentication API", produces = MediaType.APPLICATION_JSON_VALUE,
+     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 public class AuthenticationController {
 
   @Autowired
@@ -27,6 +28,7 @@ public class AuthenticationController {
   @ApiOperation("Retrieves a token and refresh_token of the provided credentials.")
   @ApiResponses(value = {
       @ApiResponse(code = 200, message = "Ok"),
+      @ApiResponse(code = 400, message = "Bad Request"),
       @ApiResponse(code = 401, message = "Unauthorized"),
       @ApiResponse(code = 500, message = "Internal Server Error"),
   })
@@ -36,10 +38,11 @@ public class AuthenticationController {
     return ResponseEntity.ok(tokenDto);
   }
 
-  @PostMapping(value = "authenticate/refresh")
+  @PostMapping(value = "refresh")
   @ApiOperation("Generates a new set of token and refresh_token with the refresh_token provided.")
   @ApiResponses(value = {
       @ApiResponse(code = 200, message = "Ok"),
+      @ApiResponse(code = 400, message = "Bad Request"),
       @ApiResponse(code = 401, message = "Unauthorized"),
       @ApiResponse(code = 500, message = "Internal Server Error"),
   })

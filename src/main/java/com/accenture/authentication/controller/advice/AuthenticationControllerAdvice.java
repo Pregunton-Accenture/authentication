@@ -1,11 +1,10 @@
 package com.accenture.authentication.controller.advice;
 
 import com.accenture.authentication.exception.TokenExpiredException;
+import com.accenture.authentication.exception.UsernameExistException;
 import com.accenture.pojo.SimpleResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -22,9 +21,8 @@ public class AuthenticationControllerAdvice extends ResponseEntityExceptionHandl
   }
 
   @ExceptionHandler(value = {
-      AuthenticationException.class,
-      UsernameNotFoundException.class,
-      TokenExpiredException.class
+      TokenExpiredException.class,
+      UsernameExistException.class
   })
   protected ResponseEntity<SimpleResponse> unauthorizedExceptionHandler(Exception ex) {
     return buildSimpleResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED);
