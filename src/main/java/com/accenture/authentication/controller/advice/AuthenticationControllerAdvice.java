@@ -1,25 +1,40 @@
 package com.accenture.authentication.controller.advice;
 
-import com.accenture.authentication.dto.ApiError;
-import com.accenture.authentication.exception.PasswordsNotEqualsException;
-import com.accenture.authentication.exception.UsernameExistsException;
+import com.accenture.authentication.exception.TokenExpiredException;
+import com.accenture.authentication.exception.UsernameExistException;
+import com.accenture.pojo.SimpleResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @ControllerAdvice
-public class AuthenticationControllerAdvice {
+public class AuthenticationControllerAdvice extends ResponseEntityExceptionHandler {
 
-  @ExceptionHandler(PasswordsNotEqualsException.class)
-  public ResponseEntity<ApiError> handlePasswordsNotEqualsException(PasswordsNotEqualsException ex) {
-    HttpStatus status = HttpStatus.BAD_REQUEST;
-    return new ResponseEntity<ApiError>(new ApiError(ex, status), status);
+  private ResponseEntity<SimpleResponse> buildSimpleResponse(String message, HttpStatus httpStatus) {
+    return ResponseEntity.status(httpStatus)
+        .body(SimpleResponse.builder()
+            .message(message)
+            .status(httpStatus.value())
+            .build());
   }
 
-  @ExceptionHandler(UsernameExistsException.class)
-  public ResponseEntity<ApiError> handleUsernameExistsException(UsernameExistsException ex) {
-    HttpStatus status = HttpStatus.BAD_REQUEST;
-    return new ResponseEntity<ApiError>(new ApiError(ex, status), status);
+  @ExceptionHandler(value = {
+      TokenExpiredException.class,
+      UsernameExistException.class
+  })
+  protected ResponseEntity<SimpleResponse> unauthorizedExceptionHandler(Exception ex) {
+    return buildSimpleResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+  }
+
+  @ExceptionHandler(NullPointerException.class)
+  protected ResponseEntity<SimpleResponse> nullPointerExceptionHandler(NullPointerException ex) {
+    return buildSimpleResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(Exception.class)
+  protected ResponseEntity<SimpleResponse> unexpectedErrorHandler(Exception ex) {
+    return buildSimpleResponse(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
