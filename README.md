@@ -1,4 +1,4 @@
-###### Authentication API
+# Authentication API
 
 * [Description](#description)
 * [Prerequisites](#prerequisites)
