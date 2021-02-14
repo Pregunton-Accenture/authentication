@@ -20,6 +20,7 @@ I will provide a list with the dependencies, and their download link:
 * Maven ([Download link](https://maven.apache.org/))
 * Git ([Download link](https://git-scm.com/downloads))
 * MariaDB ([Download link](https://downloads.mariadb.org/))
+* Pregunton-Core ([Repository link](https://github.com/Pregunton-Accenture/pregunton-core))
 
 ## Installation
 
